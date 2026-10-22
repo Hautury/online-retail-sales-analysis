@@ -1,43 +1,24 @@
--- ============================================================================
 -- 01_data_cleaning.sql
--- Project: Online Retail Sales & Customer Analytics
--- Database: SQLite (DBeaver)
--- Source table: Online_Retail_DBeaver (UCI Online Retail dataset)
--- Period: December 2010 - December 2011
--- Purpose: Validate raw transactions, normalize CustomerID, and create a
---          positive-sales fact table for downstream sales and RFM analysis.
+-- Online Retail project | SQLite
+-- I use this script to check the original data and prepare it for analysis.
+-- Raw data was imported from the UCI Online Retail dataset into Online_Retail_DBeaver.
 
--- ============================================================================
--- STEP 1. RAW DATA QUALITY CHECKS
--- Business question: How much raw data do we have, and which issues need
--- attention before calculating sales?
--- ============================================================================
-
-SELECT COUNT(*) AS raw_line_items
+-- 1. Check the original data
+SELECT COUNT(*) AS raw_rows
 FROM Online_Retail_DBeaver;
--- EXPECTED RESULT (original project import): 541,909 line items.
+-- Result: 541,909 rows. Each row is a product line, not necessarily one order.
 
 SELECT
     SUM(CASE WHEN InvoiceNo LIKE 'C%' THEN 1 ELSE 0 END) AS cancellation_lines,
-    SUM(CASE WHEN Quantity <= 0 THEN 1 ELSE 0 END) AS non_positive_quantity_lines,
-    SUM(CASE WHEN UnitPrice <= 0 THEN 1 ELSE 0 END) AS non_positive_price_lines,
-    SUM(CASE WHEN CustomerID IS NULL
-              OR TRIM(CAST(CustomerID AS TEXT)) = ''
-             THEN 1 ELSE 0 END) AS missing_customer_id_lines
+    SUM(CASE WHEN Quantity <= 0 THEN 1 ELSE 0 END) AS nonpositive_quantity,
+    SUM(CASE WHEN UnitPrice <= 0 THEN 1 ELSE 0 END) AS nonpositive_price,
+    SUM(CASE WHEN CustomerID IS NULL OR TRIM(CAST(CustomerID AS TEXT)) = ''
+             THEN 1 ELSE 0 END) AS missing_customer_ids
 FROM Online_Retail_DBeaver;
--- DATA QUALITY NOTES:
--- * Cancellation, quantity, and price categories can overlap. Do NOT add
---   these counts together to estimate removed rows.
--- * The original import contained blank CustomerID values; these should be
---   normalized to SQL NULL before customer-level analysis.
--- * In the original project, 135,080 raw rows had missing CustomerID.
+-- I found 135,080 rows with missing customer IDs.
+-- Some problem categories overlap, so their counts should not be added together.
 
--- ============================================================================
--- STEP 2. STANDARDIZE FIELD TYPES AND MISSING CUSTOMER IDS
--- Business question: Can customer identifiers be made consistent without
--- losing transaction rows?
--- ============================================================================
-
+-- 2. Make a cleaned copy
 DROP TABLE IF EXISTS retail_cleaned;
 
 CREATE TABLE retail_cleaned AS
@@ -52,23 +33,17 @@ SELECT
     Country
 FROM Online_Retail_DBeaver;
 
--- DATA CLEANING DECISIONS:
--- * InvoiceNo is text because cancellations use a leading 'C'.
--- * Empty/whitespace-only CustomerID values become NULL.
--- * CustomerID is converted to INTEGER for consistent customer grouping.
--- * All original line items are retained in retail_cleaned for traceability.
+-- InvoiceNo stays as text because canceled invoices start with C.
+-- Blank CustomerID values are converted to NULL.
+-- I keep all original rows here so I can still study cancellations later.
 
 SELECT
-    COUNT(*) AS cleaned_line_items,
-    SUM(CASE WHEN CustomerID IS NULL THEN 1 ELSE 0 END) AS missing_customer_id_lines
+    COUNT(*) AS cleaned_rows,
+    SUM(CASE WHEN CustomerID IS NULL THEN 1 ELSE 0 END) AS missing_customer_ids
 FROM retail_cleaned;
--- EXPECTED RESULT: 541,909 cleaned line items (same as source).
+-- Check: the row count should still be 541,909.
 
--- ============================================================================
--- STEP 3. CREATE THE POSITIVE-SALES ANALYSIS TABLE
--- Business question: Which transaction lines represent valid positive sales?
--- ============================================================================
-
+-- 3. Create a table for positive sales
 DROP TABLE IF EXISTS retail_sales;
 
 CREATE TABLE retail_sales AS
@@ -80,66 +55,41 @@ WHERE Quantity > 0
   AND UnitPrice > 0
   AND InvoiceNo NOT LIKE 'C%';
 
--- BUSINESS LOGIC:
--- * Keep only positive quantities and positive unit prices.
--- * Exclude invoices marked as cancellations (InvoiceNo starts with 'C').
--- * Revenue is calculated at LINE-ITEM level as Quantity * UnitPrice.
--- * Revenue here represents POSITIVE GROSS SALES, not net sales after refunds.
--- * Missing CustomerID does not invalidate a sale; retain these rows for
---   overall sales and country-level reporting.
+-- I exclude cancellations and nonpositive quantities/prices for gross sales.
+-- This is positive gross sales, NOT net revenue after cancellations.
+-- Missing CustomerID rows are still useful for overall sales analysis.
 
--- ============================================================================
--- STEP 4. VERIFY THE OUTPUT
--- Business question: Does the sales table contain the expected volume and
--- value, and are invalid transaction lines excluded?
--- ============================================================================
-
+-- 4. Check the final sales table
 SELECT
-    COUNT(*) AS valid_sales_line_items,
+    COUNT(*) AS sales_lines,
     COUNT(DISTINCT InvoiceNo) AS total_orders,
     ROUND(SUM(Revenue), 2) AS gross_sales,
-    SUM(CASE WHEN CustomerID IS NULL THEN 1 ELSE 0 END) AS unidentified_sales_lines
+    SUM(CASE WHEN CustomerID IS NULL THEN 1 ELSE 0 END) AS missing_customer_ids
 FROM retail_sales;
--- EXPECTED (original project):
--- valid_sales_line_items = 530,104
--- gross_sales = 10,666,684.54 (GBP)
--- Order count and unidentified sales lines should be read from query output.
+-- Results: 530,104 sales lines and GBP 10,666,684.54 in gross sales.
 
 SELECT
-    SUM(CASE WHEN Quantity <= 0 THEN 1 ELSE 0 END) AS invalid_quantity_lines,
-    SUM(CASE WHEN UnitPrice <= 0 THEN 1 ELSE 0 END) AS invalid_price_lines,
-    SUM(CASE WHEN InvoiceNo LIKE 'C%' THEN 1 ELSE 0 END) AS cancellation_lines
+    SUM(CASE WHEN Quantity <= 0 THEN 1 ELSE 0 END) AS bad_quantity,
+    SUM(CASE WHEN UnitPrice <= 0 THEN 1 ELSE 0 END) AS bad_price,
+    SUM(CASE WHEN InvoiceNo LIKE 'C%' THEN 1 ELSE 0 END) AS cancellations
 FROM retail_sales;
--- EXPECTED RESULT: all three counts = 0.
+-- All three values should be zero.
 
 SELECT
-    (SELECT COUNT(*) FROM retail_cleaned) AS cleaned_line_items,
-    (SELECT COUNT(*) FROM retail_sales) AS valid_sales_line_items,
-    (SELECT COUNT(*) FROM retail_cleaned)
-      - (SELECT COUNT(*) FROM retail_sales) AS excluded_line_items;
--- EXPECTED RESULT: 541,909 - 530,104 = 11,805 excluded line items.
+    (SELECT COUNT(*) FROM retail_cleaned) AS original_rows,
+    (SELECT COUNT(*) FROM retail_sales) AS sales_rows,
+    (SELECT COUNT(*) FROM retail_cleaned) -
+    (SELECT COUNT(*) FROM retail_sales) AS excluded_rows;
+-- 11,805 lines are excluded from the positive-sales table.
 
--- ============================================================================
--- STEP 5. OPTIONAL: VALIDATE CUSTOMER COVERAGE FOR FUTURE RFM ANALYSIS
--- Business question: How many identified customers can be analyzed?
--- ============================================================================
-
+-- 5. Check how many customers can be used in customer analysis
 SELECT
     COUNT(DISTINCT CustomerID) AS identified_customers,
-    COUNT(DISTINCT CASE WHEN CustomerID IS NOT NULL THEN InvoiceNo END)
-        AS identified_customer_orders
+    COUNT(DISTINCT InvoiceNo) AS identified_orders
 FROM retail_sales
 WHERE CustomerID IS NOT NULL;
 
--- BUSINESS INSIGHTS:
--- * Raw transaction lines are not the same as unique orders: one invoice can
---   contain multiple products, so order KPIs use COUNT(DISTINCT InvoiceNo).
--- * The positive-sales table supports monthly, country, and order analysis.
--- * RFM / customer segmentation should use only identified customers.
---
--- BUSINESS RECOMMENDATIONS:
--- * Use retail_sales for Gross Sales and Total Orders KPIs in Power BI.
--- * Filter CustomerID IS NOT NULL in customer-level queries and RFM views.
--- * Analyze cancellations/returns separately if net revenue is required.
--- * Preserve the raw source table for reproducibility and auditing.
--- ============================================================================
+-- What I learned:
+-- Counting rows is different from counting orders, so I use DISTINCT InvoiceNo.
+-- Customer-level analysis needs CustomerID IS NOT NULL.
+-- For customer value, I will also look at cancellations instead of only gross sales.
