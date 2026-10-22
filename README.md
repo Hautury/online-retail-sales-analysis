@@ -170,3 +170,14 @@ The dashboard supports visual exploration of revenue trends, geographic concentr
 
 https://archive.ics.uci.edu/dataset/352/online+retail
 
+
+### How to Reproduce
+
+1. Download the Online Retail dataset from the UCI Machine Learning Repository.
+2. Import the dataset into SQLite using DBeaver.
+3. Name the imported raw table `Online_Retail_DBeaver`.
+4. Run `01_data_cleaning.sql` to validate and prepare the data.
+5. Run `02_sales_analysis.sql` to reproduce the business analysis.
+6. Open `Retail_Sales_Customer_Analytics.pbit` in Power BI Desktop and configure the required data source.
+
+
