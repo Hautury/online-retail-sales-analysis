@@ -172,10 +172,3 @@ The dashboard supports visual exploration of revenue trends, geographic concentr
 
 https://archive.ics.uci.edu/dataset/352/online+retail
 
-To reproduce the analysis:
-
-1. Download the Online Retail dataset from UCI.
-2. Import the dataset into SQLite.
-3. Create the cleaned and positive-sales tables.
-4. Run the SQL analysis queries.
-5. Open the Power BI template and connect
