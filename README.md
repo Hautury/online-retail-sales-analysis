@@ -1,183 +1,83 @@
 # Online Retail Sales & Customer Analytics
 
-**SQL (SQLite) | Power BI | Data Cleaning | Customer Segmentation | Business Intelligence**
+**SQL (SQLite) · Power BI · Data Cleaning · Customer Analysis**
 
-An end-to-end retail analytics portfolio project using transactional data to investigate sales performance, customer purchasing behavior, geographic revenue concentration, and customer retention opportunities.
+I built this project to practice working with real transaction data and answering business questions using SQL and Power BI. I wanted to look at more than just total sales, so I also explored customer purchasing behavior, cancellations, and simple RFM customer segments.
 
-The project combines SQL-based data preparation and exploratory analysis with an interactive Power BI dashboard to translate transaction-level data into actionable business insights.
+## Project overview
 
-## 1. Project Overview
+- **Dataset:** [UCI Online Retail](https://archive.ics.uci.edu/dataset/352/online+retail)
+- **Period:** December 2010 to December 2011
+- **Tools:** SQLite, DBeaver, Power BI Desktop
+- **Original data:** 541,909 transaction line items
 
-**Dataset:** UCI Online Retail Dataset  
-**Period:** December 2010 – December 2011  
-**Tools:** SQLite, DBeaver, Power BI Desktop  
-**Focus:** Sales Analytics, Customer Behavior, RFM Segmentation
+The main questions I tried to answer were: When were sales strongest? Which countries and customers contributed the most? How many customers bought more than once? And how do canceled orders change the picture?
 
-The dataset contains **541,909 transaction line items** from a UK-based online retailer.
+## What I did
 
-The objective is to answer business questions such as:
+### 1. Cleaned the data
 
-- How does monthly sales revenue change over time?
-- Which countries contribute the most revenue?
-- Who are the highest-value customers?
-- What percentage of customers make repeat purchases?
-- How do cancellations affect customer value?
-- How can RFM analysis support customer segmentation and retention strategies?
+I imported the dataset into SQLite and used `01_data_cleaning.sql` to check missing customer IDs, canceled invoices, quantities, and prices. I kept a cleaned copy of all transactions and created a separate table for positive sales.
 
-## 2. Project Workflow
+The positive-sales table has **530,104 line items** and **£10,666,684.54 in gross sales**. These figures exclude cancellations, so I do not treat them as net revenue.
 
-**Raw Data → Data Cleaning → SQL Analysis → Customer Segmentation → Power BI Dashboard → Business Recommendations**
+### 2. Analyzed sales and customers in SQL
 
-### Data Preparation
+In `02_sales_analysis.sql`, I used queries with `GROUP BY`, `COUNT(DISTINCT)`, CTEs, `CASE WHEN`, `LAG()`, and date functions to study monthly revenue, growth, countries, repeat purchases, and customer value.
 
-SQL was used to:
+One part I found especially interesting was customer **12346**. Looking only at positive sales, this customer seemed to have spent more than £77,000. After checking the original transactions, I found that the order had been fully canceled. This made me realize why customer value should not be calculated from gross sales alone.
 
-- Standardize data types and customer identifiers.
-- Identify missing customer IDs.
-- Separate positive sales from cancellations.
-- Remove nonpositive quantities and prices from gross sales analysis.
-- Calculate line-item revenue using `Quantity * UnitPrice`.
-- Create reusable tables for downstream analysis.
+I also created a `customer_rfm` view using recency, frequency, and cancellation-adjusted monetary value. The segments are based on rules I chose for this project, not standard RFM quintile scores.
 
-The cleaned positive-sales dataset contains **530,104 transaction line items**, representing approximately **£10.67 million in gross sales**.
+### 3. Built a Power BI dashboard
 
-Gross sales exclude cancellations and should not be interpreted as net revenue.
+I created a Power BI report with these visuals:
 
-### SQL Analysis
-
-The SQL analysis covers:
-
-1. Monthly revenue trends.
-2. Month-over-month revenue growth using `LAG()`.
-3. Top countries by revenue.
-4. Highest-value customers.
-5. Customer repeat purchase rates.
-6. RFM customer behavior analysis.
-7. Cancellation and net transaction value analysis.
-8. Rule-based customer segmentation.
-
-SQL techniques include:
-
-`CTEs` · `JOINs` · `GROUP BY` · `CASE WHEN` · `LAG()` · `COUNT(DISTINCT)` · `COALESCE()` · `NULLIF()` · Date Functions
-
-Each analysis includes documented business insights and recommendations.
-
-## 3. Key Business Insights
-
-### Sales Performance
-
-**November 2011 was the strongest sales month**, generating approximately **£1.51 million** in positive sales.
-
-September and November recorded month-over-month revenue growth of **39.45%** and **30.69%**, respectively.
-
-Sales increased across September, October, and November, suggesting a period worth investigating for seasonal demand, product mix, or promotional effects.
-
-**Recommendation:** Investigate the drivers of late-year sales growth and use comparable full-month periods when evaluating performance.
-
-### Geographic Revenue Concentration
-
-The **United Kingdom contributed approximately 84.61%** of gross sales, equivalent to roughly **£9.03 million**.
-
-The Netherlands and EIRE were the next largest markets, contributing approximately 2.68% and 2.66%, respectively.
-
-This indicates substantial geographic revenue concentration.
-
-**Recommendation:** Maintain a strong focus on the UK market while evaluating growth opportunities in other established markets.
-
-### Customer Retention
-
-Among **4,338 identified customers**, **2,845 placed at least two distinct orders**.
-
-The observed repeat purchase rate was **65.58%**.
-
-This suggests that repeat customers represent a substantial share of the identified customer base.
-
-**Recommendation:** Explore second-purchase campaigns for one-time buyers and analyze customer cohorts to better understand retention over time.
-
-### Cancellation Analysis
-
-The dataset contains **3,836 distinct cancellation invoices**, representing approximately **£896,812.49 in negative transaction value**.
-
-One customer initially appeared to have generated over £77,000 in positive sales, but the purchase was fully canceled.
-
-This demonstrates how gross sales alone can misrepresent customer value.
-
-**Recommendation:** Incorporate cancellations when assessing net customer contribution and distinguish gross sales from cancellation-adjusted transaction value.
-
-### RFM Customer Segmentation
-
-Customers were segmented using three behavioral dimensions:
-
-- **Recency:** Days since the most recent positive purchase.
-- **Frequency:** Number of distinct positive-sales orders.
-- **Monetary:** Cancellation-adjusted transaction value.
-
-The project uses transparent, rule-based customer segments rather than quintile-based RFM scores.
-
-| Customer Segment | Business Interpretation |
-|---|---|
-| High Value Active | Recent, frequent, high-value customers |
-| High Value Inactive | High-value customers with long periods of inactivity |
-| Regular Customer | Customers not meeting the other segment rules |
-| One-Time Buyer | Customers with one positive-sales order |
-| No Net Value | Customers with nonpositive net transaction value |
-
-The **High Value Active** segment contains **757 customers** and contributes approximately **£5.22 million** in net transaction value.
-
-This represents approximately **62.8% of net transaction value across identified customers**.
-
-**Recommendation:** Prioritize retention for high-value active customers, investigate reactivation opportunities for inactive high-value customers, and encourage second purchases among one-time buyers.
-
-## 4. Power BI Dashboard
-
-The Power BI dashboard presents sales and customer performance through six primary visualizations.
-
-**Key Performance Indicators**
-- Gross Sales
-- Total Orders
-- Average Order Value
-
-**Sales Analysis**
+- Gross Sales, Total Orders, and Average Order Value
 - Monthly Sales Trend
 - Top 10 Countries by Revenue
-
-**Customer Analysis**
 - Net Customer Value by Segment
 - Customer Count by Segment
 
-The dashboard supports visual exploration of revenue trends, geographic concentration, and customer segment performance.
+The `.pbit` file is included as a Power BI template. Opening it may require configuring the source data on your computer.
 
+## A few findings
 
-### Dashboard Preview
-
-![Retail Sales Dashboard](Sales%20%26%20Customer%20Analytics.png)
-
-## 5. Repository Contents
-
-| File | Description |
+| Question | What I found |
 |---|---|
-| `01_data_cleaning.sql` | Data validation, cleaning, and preparation of the sales dataset |
-| `02_sales_analysis.sql` | SQL analysis of sales trends, customer behavior, cancellations, and RFM segmentation |
-| `Retail_Sales_Customer_Analytics.pbit` | Power BI dashboard template |
+| Strongest sales month | November 2011, about **£1.51 million** in positive sales |
+| Late-year sales | September and November grew **39.45%** and **30.69%** month over month |
+| Largest market | The UK accounted for **84.61%** of gross sales |
+| Repeat customers | **2,845 of 4,338** identified customers placed at least two orders (**65.58%**) |
+| Cancellations | **3,836** cancellation invoices, totaling about **£896,812** in negative transaction value |
+| High Value Active segment | **757 customers** with about **£5.22 million** in cancellation-adjusted transaction value |
+
+December 2010 and December 2011 are incomplete months, so I avoid using them for direct full-month comparisons. The repeat-purchase percentage describes behavior within this dataset; it is not a cohort retention rate.
+
+## Dashboard preview
+
+![Power BI dashboard](Sales%20%26%20Customer%20Analytics.png)
+
+## Files
+
+| File | Purpose |
+|---|---|
+| `01_data_cleaning.sql` | Checks and prepares the retail data |
+| `02_sales_analysis.sql` | SQL questions, results, and short business notes |
+| `Retail_Sales_Customer_Analytics.pbit` | Power BI report template |
 | `Sales & Customer Analytics.png` | Dashboard screenshot |
-| `README.md` | Project documentation, methodology, findings, and recommendations |
-| `.gitignore` | Excludes local databases and raw data files |
+| `README.md` | Project explanation |
 
+## How to reproduce the SQL work
 
-## 6. Data Source and Reproducibility
+1. Download the dataset from the [UCI repository](https://archive.ics.uci.edu/dataset/352/online+retail).
+2. Import it into a SQLite database using DBeaver. Name the raw table `Online_Retail_DBeaver`.
+3. Run `01_data_cleaning.sql` to create `retail_cleaned` and `retail_sales`.
+4. Run `02_sales_analysis.sql` to reproduce the analysis and create the `customer_rfm` view.
+5. Open the Power BI template and configure its data source if you want to explore the dashboard.
 
-**Source:** UCI Machine Learning Repository — Online Retail Dataset
+## What I learned
 
-https://archive.ics.uci.edu/dataset/352/online+retail
+This project helped me practice SQL on a dataset with real cleaning issues. The biggest lesson was that **a metric can look correct in a query but still be misleading for a business question**. In particular, gross sales, canceled transactions, and customer value need to be treated differently.
 
-
-### How to Reproduce
-
-1. Download the Online Retail dataset from the UCI Machine Learning Repository.
-2. Import the dataset into SQLite using DBeaver.
-3. Name the imported raw table `Online_Retail_DBeaver`.
-4. Run `01_data_cleaning.sql` to validate and prepare the data.
-5. Run `02_sales_analysis.sql` to reproduce the business analysis.
-6. Open `Retail_Sales_Customer_Analytics.pbit` in Power BI Desktop and configure the required data source.
-
-
+I would like to improve this project further by testing different RFM thresholds and adding a more detailed analysis of customer retention over time.
