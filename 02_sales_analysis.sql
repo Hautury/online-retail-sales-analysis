@@ -578,6 +578,7 @@ LIMIT 10;
 
 -- ============================================
 
+DROP VIEW IF EXISTS customer_rfm;
 
 CREATE VIEW customer_rfm AS
 
