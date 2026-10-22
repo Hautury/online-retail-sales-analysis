@@ -1,6 +1,8 @@
-## Power BI Dashboard
+# Online Retail Sales & Customer Analytics
 
-![Retail Sales Dashboard](Sales%20%26%20Customer%20Analytics.png)# Online Retail Sales & Customer Analytics
+![Retail Sales Dashboard](Sales%20%26%20Customer%20Analytics.png)
+
+**SQL (SQLite) | Power BI | Data Cleaning | Customer Segmentation | Business Intelligence**
 
 **SQL (SQLite) | Power BI | Data Cleaning | Customer Segmentation | Business Intelligence**
 
