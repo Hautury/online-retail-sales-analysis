@@ -149,19 +149,22 @@ The Power BI dashboard presents sales and customer performance through six prima
 
 The dashboard supports visual exploration of revenue trends, geographic concentration, and customer segment performance.
 
+
 ### Dashboard Preview
 
-_Add a screenshot here once the final dashboard image has been uploaded to the repository._
+![Retail Sales Dashboard](Sales%20%26%20Customer%20Analytics.png)
 
 ## 5. Repository Contents
 
 | File | Description |
 |---|---|
-| `02_sales_analysis.sql` | SQL queries covering sales performance, cancellations, customer behavior, and RFM segmentation |
+| `01_data_cleaning.sql` | Data validation, cleaning, and preparation of the sales dataset |
+| `02_sales_analysis.sql` | SQL analysis of sales trends, customer behavior, cancellations, and RFM segmentation |
 | `Retail_Sales_Customer_Analytics.pbit` | Power BI dashboard template |
+| `Sales & Customer Analytics.png` | Dashboard screenshot |
 | `README.md` | Project documentation, methodology, findings, and recommendations |
+| `.gitignore` | Excludes local databases and raw data files |
 
-The data-cleaning SQL script and dashboard screenshot can be added as separate files.
 
 ## 6. Data Source and Reproducibility
 
