@@ -4,8 +4,6 @@
 
 **SQL (SQLite) | Power BI | Data Cleaning | Customer Segmentation | Business Intelligence**
 
-**SQL (SQLite) | Power BI | Data Cleaning | Customer Segmentation | Business Intelligence**
-
 An end-to-end retail analytics portfolio project using transactional data to investigate sales performance, customer purchasing behavior, geographic revenue concentration, and customer retention opportunities.
 
 The project combines SQL-based data preparation and exploratory analysis with an interactive Power BI dashboard to translate transaction-level data into actionable business insights.
