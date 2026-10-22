@@ -1,7 +1,5 @@
 # Online Retail Sales & Customer Analytics
 
-![Retail Sales Dashboard](Sales%20%26%20Customer%20Analytics.png)
-
 **SQL (SQLite) | Power BI | Data Cleaning | Customer Segmentation | Business Intelligence**
 
 An end-to-end retail analytics portfolio project using transactional data to investigate sales performance, customer purchasing behavior, geographic revenue concentration, and customer retention opportunities.
